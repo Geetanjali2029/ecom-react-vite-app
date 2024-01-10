@@ -42,11 +42,7 @@ import ShowNotificationDialog from './ShowNotificationDialog';
 
       setCartItems(tempCartData);
       props.cartData(tempCartData);
-      
-      props.cartQuantity(
-        tempCartData.length
-        // tempCartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
-      );
+      props.cartQuantity(tempCartData.length);
 
       setNotification("Product added to cart successfully");
     };

@@ -44,7 +44,7 @@ function ProductDetail(props) {
    
     return (
         <div className="flex-1 bg-gray-100 p-4">
-            <h1 className="text-3xl font-bold underline">Product Detail</h1>
+            <h1 className="text-3xl ">Product details</h1>
 
             <div className="container mx-auto p-4">
                 <div className="flex">
@@ -58,8 +58,8 @@ function ProductDetail(props) {
                     <div className="w-1/2 ml-4">
                     <h1 className="text-3xl font-semibold mb-2">{productData.title}</h1>
                     <p className="text-gray-600 mb-4">{productData.description}</p>
-                    <div className="text-2xl font-bold mb-4">₹{productData.price}.00</div>
-                    <div className="text-gray-600 flex items-center mb-2">
+                    <div className="text-2xl  mb-4">₹{productData.price}.00</div>
+                    <div className="text-gray-600 items-center mb-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-l"
                       onClick={decrementQuantity}
@@ -88,6 +88,4 @@ const mapStateToProps = (state) => ({
     cart: state.cart,
   });
   
-  export default connect(mapStateToProps,null)(ProductDetail);
-
-// export default ProductDetail
+export default connect(mapStateToProps,null)(ProductDetail);

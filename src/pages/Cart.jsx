@@ -53,7 +53,7 @@ function Cart(props) {
       let tempSubtotal = 0;
       if(productData.length !== 0){
         productData.map((item) => // if the item is already in the cart, increase the quantity of the item
-        tempSubtotal = tempSubtotal + item.price   
+        tempSubtotal = tempSubtotal + (item.price * item.quantity)
         );
         tempTotalAmount = tempSubtotal + shippingCharges;
       }
@@ -66,11 +66,7 @@ function Cart(props) {
     setCartItems(updatedProducts);
 
     props.cartData(updatedProducts);
-      
-    props.cartQuantity(
-      updatedProducts.length
-      // updatedProducts.reduce((a, b) => a + (b["quantity"] || 0), 0)
-    );
+    props.cartQuantity(updatedProducts.length);
 
     setNotification("Product removed from cart successfully");
    }
@@ -96,13 +92,12 @@ function Cart(props) {
         body: JSON.stringify(postData)
       };
       fetch('https://fake-ecommerce-app-api.onrender.com/orders', requestOptions)
-          .then(response => response.json())
-          .then(json=>console.log(json));
-
-      setNotification("Order placed successfully");
-      props.cartData([]);
-      props.cartQuantity(0);
-      navigate("/orders");
+          .then(response => {
+            setNotification("Order placed successfully");
+            props.cartData([]);
+            props.cartQuantity(0);
+            navigate("/orders");
+          });
   };
 
   const incrementQuantity = (item) => {
@@ -114,34 +109,25 @@ function Cart(props) {
     }
     setCartItems(cartData);
     setQuantity(quantity + 1);
+    calculateAmount(cartData);
 
     props.cartData(cartData);
-
-    props.cartQuantity(
-      cartData.length
-      //cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
-    );
+    props.cartQuantity(cartData.length);
 };
 
 const decrementQuantity = (item) => {
   let cartData = cartItems;
-    if (cartItems.quantity > 1) {
-      
-      for (var i = 0; i < cartData.length; i++) {
-        if (cartData[i].id === item.id) {
-          cartData[i].quantity = cartData[i].quantity - 1;
-        }
-      }
-      setCartItems(cartData);
-      setQuantity(quantity - 1);
-
-      props.cartData(cartData);
-
-      props.cartQuantity(
-        cartData.length
-        //cartData.reduce((a, b) => a + (b["quantity"] || 0), 0)
-      );
+  for (var i = 0; i < cartData.length; i++) {
+    if (cartData[i].id === item.id && item.quantity > 1) {
+      cartData[i].quantity = cartData[i].quantity - 1;
     }
+  }
+  setCartItems(cartData);
+  setQuantity(quantity - 1);
+  calculateAmount(cartData);
+
+  props.cartData(cartData);
+  props.cartQuantity(cartData.length);
 };
 
   const goToProductDetail = (id) => {
@@ -151,7 +137,7 @@ const decrementQuantity = (item) => {
   return (
     <div className="flex-1 bg-gray-100 p-4">
       <div className="container mx-auto my-8">
-        <h1 className="text-3xl font-semibold underline mb-4">My Cart</h1>
+        <h1 className="text-3xl  mb-4">My Cart</h1>
         {cartItems.length === 0 ? (
           <span>Your cart is empty</span>
         ):(<>
@@ -161,8 +147,8 @@ const decrementQuantity = (item) => {
               <div className="bg-white p-4 rounded-md shadow-md" key={index}>
                 <img src={item.image} alt="Product 1" className="w-full h-32 object-cover mb-4 rounded-md" 
                 onClick={()=>goToProductDetail(item.id)}/>
-                <h2 className="text-lg font-semibold">{item.title}</h2>
-                <div className="text-gray-600 flex items-center mb-2">
+                <h2 className="text-lg">{item.title}</h2>
+                <div className="text-gray-600 items-center mb-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-l"
                       onClick={()=>decrementQuantity(item)}
@@ -170,12 +156,6 @@ const decrementQuantity = (item) => {
                       -
                     </button>
                     <span className='px-2'>{item.quantity}</span>
-                    {/* <input
-                      type="text"
-                      value={item.quantity}
-                      className="w-10 text-center"
-                      readOnly
-                    /> */}
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-r"
                       onClick={()=>incrementQuantity(item)}
@@ -190,19 +170,20 @@ const decrementQuantity = (item) => {
             ))}
           </div>
           {/* Cart summary */}
+          <div className="grid grid-cols-2 gap-2">
           <div className="mt-8 p-4 bg-white rounded-md shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Cart Summary</h2>
+            <h2 className="text-xl  mb-4">Cart Summary</h2>
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-600">Subtotal:</span>
-              <span className="font-semibold">₹{subtotal}.00</span>
+              <span className="">₹{subtotal}.00</span>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-600">Shipping:</span>
-              <span className="font-semibold">₹{shippingCharges}.00</span>
+              <span className="">₹{shippingCharges}.00</span>
             </div>
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Total:</span>
-              <span className="font-semibold">₹{totalAmount}.00</span>
+              <span className="">₹{totalAmount}.00</span>
             </div>
             
           </div>
@@ -210,7 +191,7 @@ const decrementQuantity = (item) => {
           <div className="mt-8 p-4 bg-white rounded-md shadow-md">
             {/* Shipping Address Section */}
             <section>
-              <h2 className="text-2xl font-bold mb-4">Shipping Address</h2>
+              <h2 className="text-2xl mb-4">Shipping Address</h2>
               <form className="bg-white p-4 shadow-md rounded-md" onSubmit={handleSubmit(submitShippingForm)}>
                 {/* Name Input */}
                 <div className="grid grid-cols-2 gap-4">
@@ -269,6 +250,7 @@ const decrementQuantity = (item) => {
                 </div>
               </form>
             </section>
+          </div>
           </div>
           </>
         )}

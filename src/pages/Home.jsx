@@ -15,9 +15,10 @@ function Home() {
   };
   const [checkboxes, setCheckboxes] = useState(initialCheckbox);
   const [productList, setProductList] = useState([]);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(6);
   const [totalCount, setTotalCount] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const [count, setCount] = useState(1);
   const [selectedCategories, setSelctedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({minPrice: 0, maxPrice: 5000});
 
@@ -46,25 +47,18 @@ function Home() {
     }
   };
 
-  // const handleRatingCheckboxChange = (event, checkboxName) => {
-  //   setCheckboxes((prevCheckboxes) => ({
-  //     ...prevCheckboxes,
-  //     [checkboxName]: !prevCheckboxes[checkboxName],
-  //   }));
-  // };
-
   useEffect(() => {
     fetchData(perPage, selectedCategories, priceRange.minPrice, priceRange.maxPrice);
-  }, [perPage,selectedCategories]);
+  }, [selectedCategories]);
 
-   const fetchData = async (per_page, category='', minPrice, maxPrice) => {
+   const fetchData = async (limit, category='', minPrice, maxPrice) => {
     
     if(selectedCategories.length > 0){
-      per_page = perPage; //if filter applies then reset the limit parameter in API
+      limit = perPage; //if filter applies then reset the limit parameter in API
       category = selectedCategories.toString();
     }
     
-    fetch(`https://fake-ecommerce-app-api.onrender.com/products?limit=${per_page}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`)
+    fetch(`https://fake-ecommerce-app-api.onrender.com/products?limit=${limit}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`)
         .then((response) => response.json())
         .then((data) => {
           setProductList(data.products);
@@ -73,11 +67,13 @@ function Home() {
         .catch((err) => { });
    }
 
-  const loadMoreItems = (page, currentPageNumber) => {
-    setCurrentPage(currentPageNumber);
-    let nextRecords = page * currentPageNumber;
-    fetchData(nextRecords,selectedCategories, priceRange.minPrice, priceRange.maxPrice);
-    setPerPage(nextRecords);
+   // perPage, currentPage + 1
+  const loadMoreItems = (limit) => {
+    console.log(`${limit} -- ${currentPage}`);
+    let tmpCount = count + 1;
+    setCount(tmpCount);
+    let nextRecordsLimit = limit * tmpCount;
+    fetchData(nextRecordsLimit, selectedCategories, priceRange.minPrice, priceRange.maxPrice);
   };
 
   const goToProductDetail = (id) => {
@@ -87,7 +83,7 @@ function Home() {
   const clearFilter = () => {
     setCheckboxes(initialCheckbox);
     setSelctedCategories([]);
-    setPriceRange({minPrice:0, maxPrice: 5000});
+    setPriceRange({minPrice:0, maxPrice: 10000});
     reset();
   }
 
@@ -101,20 +97,26 @@ function Home() {
   }
 
   return (
-    <div className="flex-1 bg-gray-100 p-4">
-        <h1 className="text-3xl text-left font-bold p-4">Today's Deals</h1>
+    <div className="flex-1 bg-gray-100 p-2">
+        <h1 className="text-2 font-bold text-left p-2">Today's Deals</h1>
         {/* <div className="text-left p-2 w-1/4">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </div> */}
 
         {/* Container for the layout */}
         <div className="grid grid-cols-3 gap-4 p-4">
 
             {/* Sidebar on the left */}
-            <div className="col-span-1 p-4">
+            <div className="text-left col-span-1 p-4">
                 {/* Sidebar content goes here */}
-                <span className="font-bold text-2xl text-left pr-4">Filters</span>
-                <Link className="text-gray-600 underline text-left" onClick={clearFilter}>Clear filters</Link>
-                <div className="pt-4">
-                    <span className="font-bold">Categories</span>
+                <div className="font-bold col-span-1 text-left">
+                  <p>Filters:</p>
+                </div>
+                <div className="col-span-1 text-right">
+                <Link className="text-gray-600 text-left" onClick={clearFilter}>Clear</Link>
+                </div>
+                {/* <span className="flex text-2 text-left pr-4">Filters: </span>
+                <Link className="text-gray-600 text-left" onClick={clearFilter}>Clear</Link> */}
+                <div className="col-span-1 text-left pt-4">
+                    <span className="font-bold col-span-1 text-left">Categories</span>
                 
                     <div className="pt-2 flex items-center">
                         {/* Styled Checkbox */}
@@ -176,8 +178,8 @@ function Home() {
                         
                 </div>
 
-                <div className="pt-4">
-                  <span className="font-bold">Price Range</span>
+                <div className="col-span-1 text-left pt-4">
+                  <span className="font-bold col-span-1 text-left">Price Range</span>
                   <form className="p-4 rounded-md" onSubmit={handleSubmit(filterPriceRange)}>
                   <div className="grid grid-cols-2 gap-5">
                   <div>
@@ -206,29 +208,25 @@ function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   
                 {productList.length !== 0 && productList.map((item,index) => (
-                <div className="bg-white p-4 shadow-md" key={`${item.id}_${index}_product`}>
-                    <img src={item.image} alt={`Product ${index}`} className="w-full h-48 object-cover mb-4"
-                    onClick={()=>goToProductDetail(item.id)}/>
-                    <p className="text-lg font-semibold mb-2">{item.title}</p>
-                    <p className="text-gray-700">₹{item.price}</p>
-                    <div>
-                      <AddToCart productData={item}/>
-                      
-                    </div>
+                
+                <div className="flex flex-col items-center" key={`${item.id}_${index}_product`}>
+                  <div className="p-2"><img src={item.image} alt={`Product ${index}`} className="w-full h-48 object-cover"
+                    onClick={()=>goToProductDetail(item.id)}/></div>
+                  <div className="p-2">{item.title}</div>
+                  <div className="p-2">₹{item.price}.00</div>
+                  <div className="p-2"><AddToCart productData={item}/></div>
                 </div>
                 ))}
             </div>
-            {productList.length !==0 && totalCount !== productList.length ? (
+            {productList.length !== 0 && totalCount !== productList.length && (
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
-          onClick={()=>loadMoreItems(perPage, currentPage + 1)}
-        >
-          Load More
-        </button>
-      ):(
-        <span>No data found</span>
+          className="mt-6 bg-blue-500 text-white px-8 py-2 rounded hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue active:bg-blue-800"
+          onClick={()=>loadMoreItems(perPage)}
+        >Load More</button>
       )}
-                
+      {productList.length === 0 && (
+        <span>No data found</span>
+      )}    
             </div>
         </div>
     </div>
