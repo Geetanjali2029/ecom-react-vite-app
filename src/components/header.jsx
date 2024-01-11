@@ -32,5 +32,3 @@ const mapStateToProps = (state) => ({
 });
 
 export default connect(mapStateToProps,null)(header);
-
-// export default header;

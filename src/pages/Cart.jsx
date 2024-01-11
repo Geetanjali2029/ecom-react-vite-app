@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { connect } from "react-redux";
 import { useForm } from 'react-hook-form';
 import ShowNotificationDialog from '../components/ShowNotificationDialog';
+import { SET_TIME_OUT, SHIPPING_CHARGES } from '../Constants';
+import { getData } from '../services/apiService';
 
 function Cart(props) {
   const navigate = useNavigate();
@@ -29,8 +31,6 @@ function Cart(props) {
     formState: { errors },
   } = useForm();
  
-  let shippingCharges = 10.00;
-
   useEffect(() => {
     setCartItems(props.cart.cartData);
     calculateAmount(props.cart.cartData);
@@ -42,7 +42,7 @@ function Cart(props) {
       if (notification) {
       const timeoutId = setTimeout(() => {
           setNotification(null);
-      }, 5000);
+      }, {SET_TIME_OUT});
 
       return () => clearTimeout(timeoutId);
       }
@@ -55,7 +55,7 @@ function Cart(props) {
         productData.map((item) => // if the item is already in the cart, increase the quantity of the item
         tempSubtotal = tempSubtotal + (item.price * item.quantity)
         );
-        tempTotalAmount = tempSubtotal + shippingCharges;
+        tempTotalAmount = tempSubtotal + SHIPPING_CHARGES;
       }
       setTotalAmount(tempTotalAmount);
       setSubtotal(tempSubtotal);
@@ -76,7 +76,7 @@ function Cart(props) {
     setShippingData({ ...shippingData, [name]: value });
   };
 
-   const submitShippingForm = () => {
+   const submitShippingForm = async () => {
       
       let productData = [];
       props.cart.cartData.forEach(function(element) {
@@ -91,44 +91,38 @@ function Cart(props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData)
       };
-      fetch('https://fake-ecommerce-app-api.onrender.com/orders', requestOptions)
-          .then(response => {
-            setNotification("Order placed successfully");
-            props.cartData([]);
-            props.cartQuantity(0);
-            navigate("/orders");
-          });
+      
+      try {
+        await getData(`orders`, requestOptions);
+        setNotification("Order placed successfully");
+        props.cartData([]);
+        props.cartQuantity(0);
+        navigate("/orders");
+
+        setProductData(data);
+      } catch (error) {
+        console.log(error);
+      }
+
+      // fetch('https://fake-ecommerce-app-api.onrender.com/orders', requestOptions)
+      //     .then(response => {
+      //       setNotification("Order placed successfully");
+      //       props.cartData([]);
+      //       props.cartQuantity(0);
+      //       navigate("/orders");
+      //     });
   };
 
-  const incrementQuantity = (item) => {
+  const updateQuantity = (itemId, newQuantity) => {
     let cartData = cartItems;
-    for (var i = 0; i < cartData.length; i++) {
-      if (cartData[i].id === item.id) {
-        cartData[i].quantity = cartData[i].quantity + 1;
-      }
+    let itemIndex = cartData.findIndex(item => item.id === itemId);
+    if(itemIndex){
+      cartData[itemIndex].quantity = newQuantity;
     }
     setCartItems(cartData);
-    setQuantity(quantity + 1);
     calculateAmount(cartData);
-
     props.cartData(cartData);
-    props.cartQuantity(cartData.length);
-};
-
-const decrementQuantity = (item) => {
-  let cartData = cartItems;
-  for (var i = 0; i < cartData.length; i++) {
-    if (cartData[i].id === item.id && item.quantity > 1) {
-      cartData[i].quantity = cartData[i].quantity - 1;
-    }
   }
-  setCartItems(cartData);
-  setQuantity(quantity - 1);
-  calculateAmount(cartData);
-
-  props.cartData(cartData);
-  props.cartQuantity(cartData.length);
-};
 
   const goToProductDetail = (id) => {
     navigate("/product-details/" + id);
@@ -151,14 +145,14 @@ const decrementQuantity = (item) => {
                 <div className="text-gray-600 items-center mb-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-l"
-                      onClick={()=>decrementQuantity(item)}
+                      onClick={()=>updateQuantity(item.id, (item.quantity > 1) ? item.quantity - 1 : 1)}
                     >
                       -
                     </button>
                     <span className='px-2'>{item.quantity}</span>
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-r"
-                      onClick={()=>incrementQuantity(item)}
+                      onClick={()=>updateQuantity(item.id, item.quantity + 1)}
                     >
                       +
                     </button>
@@ -179,7 +173,7 @@ const decrementQuantity = (item) => {
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-600">Shipping:</span>
-              <span className="">₹{shippingCharges}.00</span>
+              <span className="">₹{SHIPPING_CHARGES}.00</span>
             </div>
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Total:</span>

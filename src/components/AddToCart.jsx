@@ -1,6 +1,7 @@
 import React,{ useState,useEffect } from 'react';
 import { connect } from "react-redux";
 import ShowNotificationDialog from './ShowNotificationDialog';
+import { SET_TIME_OUT } from '../Constants';
 
   const AddToCart = (props) => {
     
@@ -11,11 +12,11 @@ import ShowNotificationDialog from './ShowNotificationDialog';
 
     useEffect(() => {
         if (notification) {
-        const timeoutId = setTimeout(() => {
-            setNotification(null);
-        }, 5000);
+          const timeoutId = setTimeout(() => {
+              setNotification(null);
+          }, {SET_TIME_OUT});
 
-        return () => clearTimeout(timeoutId);
+          return () => clearTimeout(timeoutId);
         }
     }, [notification]);
     

@@ -2,22 +2,22 @@ import React,{useState, useEffect} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
 import { useForm } from 'react-hook-form';
+import { getData } from '../services/apiService';
 
 function Home() {
   const navigate = useNavigate();
 
   // State to manage the checkbox values
   let initialCheckbox = {
-    smartphones:false,
-    skincare: false,
-    groceries:false,
-    home_decoration:false
+    "smartphones":false,
+    "skincare": false,
+    "groceries":false,
+    "home-decoration":false
   };
   const [checkboxes, setCheckboxes] = useState(initialCheckbox);
   const [productList, setProductList] = useState([]);
   const [perPage, setPerPage] = useState(6);
   const [totalCount, setTotalCount] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
   const [count, setCount] = useState(1);
   const [selectedCategories, setSelctedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({minPrice: 0, maxPrice: 5000});
@@ -36,14 +36,10 @@ function Home() {
       [checkboxName]: !prevCheckboxes[checkboxName],
     }));
 
-    let checkbox = checkboxName;
-    if(checkbox === 'home_decoration'){
-      checkbox = "home-decoration";
-    }
-    if(event.target.checked && !selectedCategories.includes(checkbox)){
-      setSelctedCategories(selectedCategories => [...selectedCategories, checkbox]);
+    if(event.target.checked && !selectedCategories.includes(checkboxName)){
+      setSelctedCategories(selectedCategories => [...selectedCategories, checkboxName]);
     }else{
-      setSelctedCategories(selectedCategories.filter((item) => item !== checkbox));
+      setSelctedCategories(selectedCategories.filter((item) => item !== checkboxName));
     }
   };
 
@@ -58,18 +54,16 @@ function Home() {
       category = selectedCategories.toString();
     }
     
-    fetch(`https://fake-ecommerce-app-api.onrender.com/products?limit=${limit}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setProductList(data.products);
-          setTotalCount(data.totalCount);
-        })
-        .catch((err) => { });
-   }
+    try {
+      const data = await getData(`products?limit=${limit}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`);
+      setProductList(data.products);
+      setTotalCount(data.totalCount);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-   // perPage, currentPage + 1
   const loadMoreItems = (limit) => {
-    console.log(`${limit} -- ${currentPage}`);
     let tmpCount = count + 1;
     setCount(tmpCount);
     let nextRecordsLimit = limit * tmpCount;
@@ -99,7 +93,6 @@ function Home() {
   return (
     <div className="flex-1 bg-gray-100 p-2">
         <h1 className="text-2 font-bold text-left p-2">Today's Deals</h1>
-        {/* <div className="text-left p-2 w-1/4">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. </div> */}
 
         {/* Container for the layout */}
         <div className="grid grid-cols-3 gap-4 p-4">
@@ -113,8 +106,6 @@ function Home() {
                 <div className="col-span-1 text-right">
                 <Link className="text-gray-600 text-left" onClick={clearFilter}>Clear</Link>
                 </div>
-                {/* <span className="flex text-2 text-left pr-4">Filters: </span>
-                <Link className="text-gray-600 text-left" onClick={clearFilter}>Clear</Link> */}
                 <div className="col-span-1 text-left pt-4">
                     <span className="font-bold col-span-1 text-left">Categories</span>
                 
@@ -123,7 +114,6 @@ function Home() {
                         <input
                         type="checkbox"
                         id="smartphones"
-                        // value="smartphones"
                         className="form-checkbox h-5 w-5 text-indigo-600"
                         checked={checkboxes.smartphones}
                         onChange={(e) => handleCheckboxChange(e,'smartphones')}  
@@ -137,7 +127,6 @@ function Home() {
                         <input
                         type="checkbox"
                         id="skincare"
-                        // value="skincare"
                         className="form-checkbox h-5 w-5 text-indigo-600"
                         checked={checkboxes.skincare}
                         onChange={(e) => handleCheckboxChange(e,'skincare')}
@@ -151,7 +140,6 @@ function Home() {
                         <input
                         type="checkbox"
                         id="groceries"
-                        value="groceries"
                         className="form-checkbox h-5 w-5 text-indigo-600"
                         checked={checkboxes.groceries}
                         onChange={(e) => handleCheckboxChange(e,'groceries')}
@@ -164,13 +152,12 @@ function Home() {
                         <div className="pt-2 flex items-center">
                         <input
                         type="checkbox"
-                        id="home_decoration"
-                        value="home_decoration"
+                        id="home-decoration"
                         className="form-checkbox h-5 w-5 text-indigo-600"
-                        checked={checkboxes.home_decoration}
-                        onChange={(e) => handleCheckboxChange(e,'home_decoration')}
+                        checked={checkboxes['home-decoration']}
+                        onChange={(e) => handleCheckboxChange(e,'home-decoration')}
                         />
-                        <label htmlFor="home_decoration" className="ml-2 text-gray-700">
+                        <label htmlFor="home-decoration" className="ml-2 text-gray-700">
                         Home Decoration
                         </label>
                         </div>

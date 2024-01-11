@@ -1,23 +1,20 @@
 import React, {useState, useEffect} from 'react';
+import { getData } from '../services/apiService';
 
 function Orders() {
-
   const [orderData, setOrderData] = useState([]);
 
   useEffect(() => {
-    if(isLoading){
       fetchOrders();
-      setIsLoading(false);
-    }
   }, []);
 
-  const fetchOrders = () => {
-    fetch(`https://fake-ecommerce-app-api.onrender.com/orders/user/7`)
-    .then((response) => response.json())
-    .then((data) => {
-       setOrderData(data);
-    })
-    .catch((err) => { });
+  const fetchOrders = async() => {
+    try {
+      const data = await getData(`orders/user/7`);
+      setOrderData(data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const convertDate = (param) => {

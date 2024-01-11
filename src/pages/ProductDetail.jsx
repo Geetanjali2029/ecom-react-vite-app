@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
 import { connect } from "react-redux";
-import { get } from 'react-hook-form';
+import { getData } from '../services/apiService';
 
 function ProductDetail(props) {
     const { id } = useParams();
@@ -10,10 +10,12 @@ function ProductDetail(props) {
     const [quantity, setQuantity] = useState(1);
 
     useEffect(() => {
-        
-        fetch(`https://fake-ecommerce-app-api.onrender.com/products/${id}`)
-         .then((response) => response.json())
-         .then((data) => {
+        fetchData(id);
+    }, []);
+
+    const fetchData = async(id) => {
+        try {
+            const data = await getData(`products/${id}`);
             if(props.cart.cartData.length !== 0){
                 let getQuantity = props.cart.cartData.find(x => x.id === data.id);
                 if(getQuantity)
@@ -24,23 +26,16 @@ function ProductDetail(props) {
                 data.quantity = 1;
 
             setProductData(data);
-         })
-         .catch((err) => { });
-    }, []);
+          } catch (error) {
+            console.log(error);
+          }
+    }
     
-    const incrementQuantity = () => {
-        productData.quantity = productData.quantity + 1;
+    const updateQuantity = (newQuantity) => {
+        productData.quantity = newQuantity;
+        setQuantity(newQuantity);
         setProductData(productData);
-        setQuantity(quantity + 1);
-    };
-    
-    const decrementQuantity = () => {
-        if (productData.quantity > 1) {
-            productData.quantity = productData.quantity - 1;
-            setQuantity(quantity - 1);
-        }
-        setProductData(productData);
-    };
+    }
    
     return (
         <div className="flex-1 bg-gray-100 p-4">
@@ -62,7 +57,7 @@ function ProductDetail(props) {
                     <div className="text-gray-600 items-center mb-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-l"
-                      onClick={decrementQuantity}
+                      onClick={()=>updateQuantity((productData.quantity > 1) ? productData.quantity - 1 : 1)}
                     >
                       -
                     </button>
@@ -70,7 +65,7 @@ function ProductDetail(props) {
                   
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded-r"
-                      onClick={incrementQuantity}
+                      onClick={()=>updateQuantity(productData.quantity + 1)}
                     >
                       +
                     </button>
