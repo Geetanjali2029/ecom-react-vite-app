@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { useForm } from 'react-hook-form';
 import ShowNotificationDialog from '../components/ShowNotificationDialog';
 import { SET_TIME_OUT, SHIPPING_CHARGES } from '../Constants';
-import { getData } from '../services/apiService';
+import { callAPI } from '../services/apiService';
 
 function Cart(props) {
   const navigate = useNavigate();
@@ -23,7 +23,6 @@ function Cart(props) {
   }
   
   const [shippingData, setShippingData] = useState(initialValue);
-  const [quantity, setQuantity] = useState(1);
 
   const {
     register,
@@ -93,7 +92,7 @@ function Cart(props) {
       };
       
       try {
-        await getData(`orders`, requestOptions);
+        await callAPI(`orders`, requestOptions);
         setNotification("Order placed successfully");
         props.cartData([]);
         props.cartQuantity(0);

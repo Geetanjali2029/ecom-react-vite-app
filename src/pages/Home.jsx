@@ -2,7 +2,7 @@ import React,{useState, useEffect} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
 import { useForm } from 'react-hook-form';
-import { getData } from '../services/apiService';
+import { callAPI } from '../services/apiService';
 
 function Home() {
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ function Home() {
     }
     
     try {
-      const data = await getData(`products?limit=${limit}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`);
+      const data = await callAPI(`products?limit=${limit}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`);
       setProductList(data.products);
       setTotalCount(data.totalCount);
     } catch (error) {

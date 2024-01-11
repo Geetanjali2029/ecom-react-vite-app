@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { getData } from '../services/apiService';
+import { callAPI } from '../services/apiService';
 
 function Orders() {
   const [orderData, setOrderData] = useState([]);
@@ -10,7 +10,7 @@ function Orders() {
 
   const fetchOrders = async() => {
     try {
-      const data = await getData(`orders/user/7`);
+      const data = await callAPI(`orders/user/7`);
       setOrderData(data);
     } catch (error) {
       console.log(error);

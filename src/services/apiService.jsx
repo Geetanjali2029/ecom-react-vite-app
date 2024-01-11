@@ -1,8 +1,8 @@
-import { BASE_URL } from '../Constants';
+import { API_BASE_URL } from '../Constants';
 
-export const getData = async (endpoint, options = {}) => {
+export const callAPI = async (endpoint, options = {}) => {
     try {
-      const response = await fetch(`${BASE_URL}/${endpoint}`, options);
+      const response = await fetch(`${API_BASE_URL}/${endpoint}`, options);
       const data = await response.json();
       return data;
     } catch (error) {

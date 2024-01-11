@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
 import { connect } from "react-redux";
-import { getData } from '../services/apiService';
+import { callAPI } from '../services/apiService';
 
 function ProductDetail(props) {
     const { id } = useParams();
@@ -15,7 +15,7 @@ function ProductDetail(props) {
 
     const fetchData = async(id) => {
         try {
-            const data = await getData(`products/${id}`);
+            const data = await callAPI(`products/${id}`);
             if(props.cart.cartData.length !== 0){
                 let getQuantity = props.cart.cartData.find(x => x.id === data.id);
                 if(getQuantity)
