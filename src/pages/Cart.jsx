@@ -1,16 +1,21 @@
 import React,{ useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { connect } from "react-redux";
 import { useForm } from 'react-hook-form';
 import ShowNotificationDialog from '../components/ShowNotificationDialog';
-import { SET_TIME_OUT, SHIPPING_CHARGES } from '../Constants';
+import { SET_TIME_OUT, SHIPPING_CHARGES } from '../Constants'; 
 import { callAPI } from '../services/apiService';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCartQuantity, setCartData, setTotalAmount, setSubtotal, setNotification } from '../reduxSlice/cartSlice';
 
-function Cart(props) {
+function Cart() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const cartData = useSelector(state => state.cart.cartData);
+  const totalAmount = useSelector(state => state.cart.totalAmount);
+  const subtotal = useSelector(state => state.cart.subtotal);
+  const notification = useSelector(state => state.cart.notification);
+
   const [cartItems, setCartItems] = useState([]);
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [subtotal, setSubtotal] = useState(0);
   
   let initialValue = {
     firstName:'',
@@ -31,23 +36,21 @@ function Cart(props) {
   } = useForm();
  
   useEffect(() => {
-    setCartItems(props.cart.cartData);
-    calculateAmount(props.cart.cartData);
+    setCartItems(cartData);
+    calculateAmount(cartData);
   }, [cartItems])
-
-  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
       if (notification) {
       const timeoutId = setTimeout(() => {
-          setNotification(null);
-      }, {SET_TIME_OUT});
+          dispatch(setNotification(null));
+      }, SET_TIME_OUT);
 
       return () => clearTimeout(timeoutId);
       }
   }, [notification]);
 
-   const calculateAmount = (productData) =>{
+  const calculateAmount = (productData) =>{
       let tempTotalAmount = 0;
       let tempSubtotal = 0;
       if(productData.length !== 0){
@@ -56,18 +59,16 @@ function Cart(props) {
         );
         tempTotalAmount = tempSubtotal + SHIPPING_CHARGES;
       }
-      setTotalAmount(tempTotalAmount);
-      setSubtotal(tempSubtotal);
-   }
+      dispatch(setTotalAmount(tempTotalAmount));
+      dispatch(setSubtotal(tempSubtotal));
+  }
 
    const removeItemFromCart = (productItem) => {
     let updatedProducts = cartItems.filter((item) => productItem.id !== item.id);
     setCartItems(updatedProducts);
-
-    props.cartData(updatedProducts);
-    props.cartQuantity(updatedProducts.length);
-
-    setNotification("Product removed from cart successfully");
+    dispatch(setCartData(updatedProducts));
+    dispatch(setCartQuantity(updatedProducts.length));
+    dispatch(setNotification("Product removed from cart successfully"));
    }
 
    const handleInputChange = (event) => {
@@ -78,11 +79,11 @@ function Cart(props) {
    const submitShippingForm = async () => {
       
       let productData = [];
-      props.cart.cartData.forEach(function(element) {
+      cartItems.forEach(function(element) {
         productData.push({productId: element.id, quantity: element.quantity})
       });
 
-      let postData = {"userId": "7","products": productData,"paymentStatus": `PAID|${totalAmount}`, 
+      let postData = {"userId": "13322","products": productData,"paymentStatus": `PAID|${totalAmount}`, 
       "orderStatus": "CONFIRMED","shippingAddress":shippingData};
 
       const requestOptions = {
@@ -93,34 +94,24 @@ function Cart(props) {
       
       try {
         await callAPI(`orders`, requestOptions);
-        setNotification("Order placed successfully");
-        props.cartData([]);
-        props.cartQuantity(0);
+        dispatch(setNotification("Order placed successfully"));
+        dispatch(setCartData([]));
+        dispatch(setCartQuantity(0));
         navigate("/orders");
-
-        setProductData(data);
       } catch (error) {
         console.log(error);
       }
-
-      // fetch('https://fake-ecommerce-app-api.onrender.com/orders', requestOptions)
-      //     .then(response => {
-      //       setNotification("Order placed successfully");
-      //       props.cartData([]);
-      //       props.cartQuantity(0);
-      //       navigate("/orders");
-      //     });
   };
 
   const updateQuantity = (itemId, newQuantity) => {
-    let cartData = cartItems;
-    let itemIndex = cartData.findIndex(item => item.id === itemId);
+    let tempCartData = cartItems;
+    let itemIndex = tempCartData.findIndex(item => item.id === itemId);
     if(itemIndex){
-      cartData[itemIndex].quantity = newQuantity;
+      tempCartData[itemIndex].quantity = newQuantity;
     }
-    setCartItems(cartData);
-    calculateAmount(cartData);
-    props.cartData(cartData);
+    setCartItems(tempCartData);
+    calculateAmount(tempCartData);
+    dispatch(setCartData(tempCartData));
   }
 
   const goToProductDetail = (id) => {
@@ -253,17 +244,4 @@ function Cart(props) {
   );
 }
 
-const mapStateToProps = (state) => ({
-  cart: state.cart,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    cartQuantity: (cartQuantity) =>
-      dispatch({ type: "ADD_TO_CART", data: cartQuantity }),
-    cartData: (cartData) =>
-      dispatch({ type: "CART_DATA", data: cartData }),
-  };
-}
-
-export default connect(mapStateToProps,mapDispatchToProps)(Cart);
+export default Cart;

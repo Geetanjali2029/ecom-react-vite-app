@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import AddToCart from '../components/AddToCart';
-import { connect } from "react-redux";
 import { callAPI } from '../services/apiService';
+import { useSelector } from 'react-redux';
 
-function ProductDetail(props) {
+function ProductDetail() {
+    const cartData = useSelector(state => state.cart.cartData);
     const { id } = useParams();
     const [productData, setProductData] = useState({});
     const [quantity, setQuantity] = useState(1);
@@ -16,8 +17,8 @@ function ProductDetail(props) {
     const fetchData = async(id) => {
         try {
             const data = await callAPI(`products/${id}`);
-            if(props.cart.cartData.length !== 0){
-                let getQuantity = props.cart.cartData.find(x => x.id === data.id);
+            if(cartData.length !== 0){
+                let getQuantity = cartData.find(x => x.id === data.id);
                 if(getQuantity)
                     data.quantity = getQuantity.quantity;
                 else
@@ -32,9 +33,10 @@ function ProductDetail(props) {
     }
     
     const updateQuantity = (newQuantity) => {
-        productData.quantity = newQuantity;
+        let temp = productData;
+        temp.quantity = newQuantity;
         setQuantity(newQuantity);
-        setProductData(productData);
+        setProductData(temp);
     }
    
     return (
@@ -79,8 +81,4 @@ function ProductDetail(props) {
     );
 }
 
-const mapStateToProps = (state) => ({
-    cart: state.cart,
-  });
-  
-export default connect(mapStateToProps,null)(ProductDetail);
+export default ProductDetail;
